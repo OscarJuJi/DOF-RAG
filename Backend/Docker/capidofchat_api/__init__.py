@@ -1,0 +1,1 @@
+"""CapiDOFChat API application."""

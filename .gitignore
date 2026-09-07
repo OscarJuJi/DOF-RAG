@@ -1,0 +1,16 @@
+# Previous repository metadata retained locally during monorepo migration.
+**/.git-history-backup/
+
+# Secrets and local environments.
+**/.env
+**/.env.*
+!**/.env.example
+**/.venv/
+
+# Generated artifacts.
+**/node_modules/
+**/dist/
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.ipynb_checkpoints/
