@@ -1,5 +1,9 @@
 # CapiDOFChat frontend
 
+For production on this computer, run `scripts/Start-Local.ps1` from the repository
+root and open <http://localhost:8080>. Nginx serves the compiled assets and forwards
+API requests to the local backend. Fonts and icons do not require external CDNs.
+
 Install the locked dependencies and start the development server:
 
 ```sh

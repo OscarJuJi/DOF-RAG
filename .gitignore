@@ -14,3 +14,10 @@
 **/*.py[cod]
 **/.pytest_cache/
 **/.ipynb_checkpoints/
+
+# Local production data and additional source documents.
+/documents/*
+!/documents/README.md
+/data/
+**/*.sqlite3*
+**/.test-results/

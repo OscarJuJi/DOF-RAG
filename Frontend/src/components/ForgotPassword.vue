@@ -96,19 +96,20 @@ export default {
       this.validateEmail();
       if (this.canSubmit) {
         axios
-          .post('api/solicitar_codigo', {
+          .post('/api/solicitar_codigo', {
             correo: this.input.username,
           })
-          .then((response) => {
+          .then(() => {
             localStorage.setItem('correo', this.input.username);
-            localStorage.setItem('numero', response.data.message);
             this.$router.push('/verificate-code');
           })
           .catch((error) => {
             Swal.fire({
               icon: 'error',
               title: 'Error',
-              text: error.response.data.message,
+              text:
+                error.response?.data?.message ||
+                'El servicio no está disponible.',
             });
           });
       }

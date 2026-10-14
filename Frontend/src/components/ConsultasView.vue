@@ -7,6 +7,7 @@
         type="text"
         class="search-input"
         placeholder="¿Qué deseas consultar en el DOF?"
+        maxlength="2500"
         v-model="searchText"
         @keypress.enter="performSearch"
       />
@@ -36,7 +37,7 @@
 
         <div class="filter-container">
           <div class="output-container">
-            <transition-group tag="p" name="history">
+            <transition-group tag="div" name="history">
               <div
                 v-for="item in selectedResults"
                 :key="item.id"
@@ -164,7 +165,7 @@ export default {
     groupHistoryByDay() {
       const grouped = {};
       for (const [date, entries] of Object.entries(this.chatHistory)) {
-        const day = this.formatDate(new Date(date));
+        const day = this.formatDate(new Date(`${date}T00:00:00`));
         if (!grouped[day]) {
           grouped[day] = [];
         }
@@ -183,7 +184,7 @@ export default {
     },
     loadResultsForDay(day) {
       for (const [date, entries] of Object.entries(this.chatHistory)) {
-        const formattedDate = this.formatDate(new Date(date));
+        const formattedDate = this.formatDate(new Date(`${date}T00:00:00`));
         if (formattedDate === day) {
           this.selectedResults = entries;
           break;
@@ -196,7 +197,10 @@ export default {
       this.isLoading = true;
 
       const question = this.searchText;
-      const today = new Date().toISOString().split('T')[0];
+      const now = new Date();
+      const today = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+        .toISOString()
+        .split('T')[0];
       const tmpC = [];
 
       for (const [, entries] of Object.entries(this.chatHistory)) {
@@ -216,7 +220,7 @@ export default {
       const request = {
         input: {
           question: question,
-          chat_history: historyString,
+          chat_history: historyString.slice(-16000),
         },
       };
 
@@ -247,11 +251,13 @@ export default {
             this.scrollToBottom();
           }, 100);
         })
-        .catch(() => {
+        .catch((error) => {
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'Ocurrió un error al realizar la consulta.',
+            text:
+              error.response?.data?.message ||
+              'Ocurrió un error al realizar la consulta.',
             customClass: {
               confirmButton: 'custom-confirm-button-class',
               title: 'swal-title',
@@ -480,6 +486,7 @@ export default {
 
 .query-answer {
   margin: 0;
+  white-space: pre-wrap;
 }
 
 .search-input:focus {

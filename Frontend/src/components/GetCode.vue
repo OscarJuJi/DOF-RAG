@@ -13,8 +13,12 @@
         <div class="form-information-childs">
           <h2>Código de Recuperación</h2>
           <p>
-            Ingrese el código de recuperación que enviamos al número
-            <b> {{ phoneNumber }}: </b>
+            Ingrese el código de recuperación enviado al correo
+            <b>{{ recoveryEmail }}</b
+            >. Puede consultarlo en el
+            <a href="http://localhost:8025" target="_blank" rel="noopener"
+              >buzón local</a
+            >.
           </p>
           <form class="formulario-login" name="login-form">
             <div class="mb-3">
@@ -25,7 +29,7 @@
                   v-model="codePart1"
                   maxlength="2"
                   @input="focusNext(1)"
-                  @keydown="handleBackspace(1)"
+                  @keydown="handleBackspace(1, $event)"
                   placeholder="XX"
                 />
                 <span>-</span>
@@ -35,7 +39,7 @@
                   v-model="codePart2"
                   maxlength="2"
                   @input="focusNext(2)"
-                  @keydown="handleBackspace(2)"
+                  @keydown="handleBackspace(2, $event)"
                   placeholder="XX"
                 />
                 <span>-</span>
@@ -44,7 +48,7 @@
                   ref="codePart3"
                   v-model="codePart3"
                   maxlength="2"
-                  @keydown="handleBackspace(3)"
+                  @keydown="handleBackspace(3, $event)"
                   placeholder="XX"
                 />
               </div>
@@ -89,7 +93,7 @@ export default {
       codePart3: '',
       output: '',
       showCodeError: false,
-      phoneNumber: 'Default',
+      recoveryEmail: localStorage.getItem('correo') || '',
     };
   },
 
@@ -99,11 +103,12 @@ export default {
 
       if (formattedCode.match(/^\d{2}\d{2}\d{2}$/)) {
         axios
-          .post('api/validar_codigo', {
+          .post('/api/validar_codigo', {
             codigo: formattedCode,
             correo: localStorage.getItem('correo'),
           })
-          .then(() => {
+          .then((response) => {
+            sessionStorage.setItem('resetToken', response.data.reset_token);
             this.$router.push('/changepassword');
           })
           .catch(() => {
@@ -120,7 +125,7 @@ export default {
         this.$refs.codePart3.focus();
       }
     },
-    handleBackspace(index) {
+    handleBackspace(index, event) {
       if (index === 1 && this.codePart1.length === 0 && event.keyCode === 8) {
         this.$refs.codePart1.focus();
       } else if (
@@ -139,7 +144,7 @@ export default {
     },
     solicitar(event) {
       axios
-        .post('api/solicitar_codigo', {
+        .post('/api/solicitar_codigo', {
           correo: localStorage.getItem('correo'),
         })
         .then((response) => {
@@ -147,7 +152,7 @@ export default {
             Swal.fire({
               icon: 'success',
               title: 'Código enviado',
-              text: 'Se ha mandado un nuevo código al numero de teléfono registrado',
+              text: 'Si la cuenta existe, el código llegará al buzón local.',
             });
           } else {
             this.output = 'Respuesta inesperada del servidor';
@@ -164,13 +169,6 @@ export default {
         event.preventDefault();
       }
     },
-  },
-  mounted() {
-    this.phoneNumber =
-      localStorage
-        .getItem('numero')
-        .slice(3)
-        .replace(/(\d{2})(\d{4})(\d{4})/, '$1 $2 $3') || 'Default';
   },
 };
 </script>

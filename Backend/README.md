@@ -1,5 +1,11 @@
 # CapiDOFChat backend
 
+For the local production stack, use `scripts/Start-Local.ps1` from the repository
+root. It runs `Docker/Dockerfile.local` with SQLite and native Ollama; no API keys
+are required. See the [root README](../README.md) for accounts, data, and operations.
+
+The following commands apply only to the legacy cloud-backed entry point:
+
 Copy `.env.example` to `.env` and set the required credentials. Never commit `.env`.
 
 Build and run the API from this directory:

@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "dof": {
+      "command": "docker",
+      "args": [
+        "compose",
+        "--project-directory",
+        "E:/Workspace/DOF-RAG",
+        "run",
+        "--rm",
+        "--no-deps",
+        "-T",
+        "dof-mcp",
+        "python",
+        "-m",
+        "dof_mcp.server",
+        "--transport",
+        "stdio"
+      ]
+    }
+  }
+}

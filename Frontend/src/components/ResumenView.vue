@@ -8,24 +8,21 @@
           <table>
             <thead>
               <tr>
-                <th>Codigo del diario</th>
-                <th>Fecha del diario</th>
+                <th>Documento local</th>
+                <th>Páginas</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(summary, index) in summaries" :key="index">
-                <td>{{ summary.codigo }}</td>
-                <td>{{ getSummaryDate(summary) }}</td>
+                <td>{{ summary.name }}</td>
+                <td>{{ summary.pages }}</td>
                 <td>
                   <button class="btn-view" @click="showSummary(summary)">
                     Ver resumen
                   </button>
-                  <button
-                    class="btn-download"
-                    @click="openDof(getSummaryDate(summary))"
-                  >
-                    Consultar DOF original
+                  <button class="btn-download" @click="openDof(summary)">
+                    Consultar documento original
                   </button>
                 </td>
               </tr>
@@ -38,7 +35,7 @@
     <div v-if="isModalVisible" class="modal">
       <div class="modal-content">
         <span class="close" @click="closeModal">&times;</span>
-        <h2>Resumen del DOF</h2>
+        <h2>Vista general del documento</h2>
         <p class="summary-content">{{ selectedSummary }}</p>
       </div>
     </div>
@@ -93,26 +90,30 @@ export default {
     },
     fetchSummaries() {
       axios
-        .get('/remuenes.json')
+        .get('/api/documents')
         .then((response) => {
           this.summaries = response.data;
         })
         .catch(() => {});
     },
-    getSummaryDate(summary) {
-      return Object.keys(summary).find((key) => key !== 'codigo');
-    },
-    showSummary(summary) {
-      const date = this.getSummaryDate(summary);
-      this.selectedSummary = summary[date];
+    async showSummary(summary) {
+      this.selectedSummary = 'Generando la vista general con el modelo local…';
       this.isModalVisible = true;
+      try {
+        const response = await axios.post(
+          `/api/documents/${summary.id}/summary`,
+        );
+        this.selectedSummary = response.data.output;
+      } catch (error) {
+        this.selectedSummary =
+          error.response?.data?.message || 'No se pudo generar el resumen.';
+      }
     },
     closeModal() {
       this.isModalVisible = false;
     },
-    openDof(date) {
-      const url = `https://sidof.segob.gob.mx/welcome/${date}`;
-      window.open(url, '_blank');
+    openDof(summary) {
+      window.open(`/api/documents/${summary.id}/file`, '_blank', 'noopener');
     },
     handleKeydown(event) {
       if (event.key === 'Escape') {

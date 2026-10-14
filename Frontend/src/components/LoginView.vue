@@ -171,22 +171,13 @@ export default {
             Swal.close();
             localStorage.setItem('isAuthenticated', 'true');
             localStorage.setItem('token', response.data.token);
-            axios
-              .post('/api/datos_user', null, {
-                params: {
-                  correo: this.input.username,
-                },
-              })
-              .then((response) => {
-                this.updateUser(response.data[0]);
-                localStorage.setItem('correo', this.input.username);
-                eventBus.emit('user-logged-in', response.data);
-              })
-              .catch(() => {});
+            this.updateUser(response.data.user);
+            localStorage.setItem('correo', response.data.user.correo);
+            eventBus.emit('user-logged-in', response.data.user);
             this.$router.push('/notification-view');
           })
           .catch((error) => {
-            if (error.response.status === 401) {
+            if (error.response?.status === 401) {
               Swal.fire({
                 icon: 'error',
                 title: 'Error',

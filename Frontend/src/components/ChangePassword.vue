@@ -175,11 +175,11 @@ export default {
     },
     changePassword() {
       if (this.isFormValid) {
-        this.$router.push('/');
         axios
-          .post('api/actualizar_password', {
+          .post('/api/actualizar_password', {
             contraseña: this.input.newPassword,
             correo: localStorage.getItem('correo'),
+            reset_token: sessionStorage.getItem('resetToken'),
           })
           .then((response) => {
             Swal.fire({
@@ -196,6 +196,7 @@ export default {
             })
               .then(() => {
                 localStorage.clear();
+                sessionStorage.removeItem('resetToken');
                 this.$router.push('/');
               })
               .catch(() => {});

@@ -287,7 +287,8 @@ export default {
         this.menuActive = false;
       }
     },
-    logout() {
+    async logout() {
+      await axios.post('/api/logout').catch(() => {});
       localStorage.removeItem('isAuthenticated');
       this.$store.dispatch('updateUser', {
         nombre: '',

@@ -250,6 +250,7 @@ export default {
     },
     closeCreateModal() {
       this.isModalVisible = false;
+      this.fetchEmployees();
     },
     handleResize() {
       if (window.innerWidth > 768 && this.menuActive) {

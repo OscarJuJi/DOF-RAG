@@ -1,0 +1,86 @@
+name: dof-rag
+
+services:
+  dof-mcp:
+    build: ./MCP
+    restart: unless-stopped
+    environment:
+      DOF_ARCHIVE_DIR: /archive
+    volumes:
+      - ./data/dof:/archive
+    ports:
+      - 127.0.0.1:${DOF_MCP_PORT:-8001}:8001
+    healthcheck:
+      test: [CMD, python, -c, "import httpx; httpx.post('http://127.0.0.1:8001/mcp', headers={'Accept':'application/json, text/event-stream'}, json={'jsonrpc':'2.0','id':1,'method':'ping'}, timeout=5).raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    security_opt:
+      - no-new-privileges:true
+
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Docker/Dockerfile.local
+    restart: unless-stopped
+    environment:
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?Run scripts/Start-Local.ps1 first}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Run scripts/Start-Local.ps1 first}
+      DATA_DIR: /data
+      SEED_DIR: /seed
+      DOCUMENTS_DIR: /documents
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:8b}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-qwen3-embedding:0.6b}
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - app-data:/data
+      - ./Backend/Model_code/DataWrangler/data:/seed:ro
+      - ./documents:/documents:ro
+    ports:
+      - 127.0.0.1:${BACKEND_PORT:-8000}:8000
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      - mailpit
+    security_opt:
+      - no-new-privileges:true
+
+  frontend:
+    build: ./Frontend
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${FRONTEND_PORT:-8080}:8080
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1:8080/health]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${MAIL_PORT:-8025}:8025
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_MAX_MESSAGES: 100
+    volumes:
+      - mail-data:/data
+
+volumes:
+  app-data:
+  mail-data:

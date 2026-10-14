@@ -393,7 +393,7 @@ export default {
       const notification = this.input.notif ? '1' : '0';
       if (this.canSubmit) {
         axios
-          .post('api/registro', {
+          .post('/api/registro', {
             correo: this.input.correo,
             contraseña: this.input.contraseña,
             nombre: this.input.nombre,
@@ -415,7 +415,7 @@ export default {
             this.closeModal();
           })
           .catch((error) => {
-            if (error.response.status === 400) {
+            if (error.response?.status === 400) {
               Swal.fire({
                 icon: 'error',
                 title: 'Usuario ya registrado',

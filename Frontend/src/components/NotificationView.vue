@@ -1,59 +1,32 @@
 <template>
   <div class="clase">
     <BarraNavegacion :welcomeMessage="welcomeMessage" />
-
     <div class="main-content">
       <div class="main-left">
-        <h2>Normas de tu itneres con cambios recientes</h2>
-        <ul>
-          <li>
-            <strong
-              >Cambio en los lineamientos emitidos por la Unidad de Inteligencia
-              Financiera</strong
-            >
-          </li>
-          <p>
-            Para reportar operaciones sospechosas a la Unidad de Inteligencia
-            Financiera (UIF) en México, se debe seguir el siguiente
-            procedimiento: <br />
-            1. Identificar la operación sospechosa: Reconocer cualquier
-            transacción o actividad financiera que pueda estar relacionada con
-            lavado de dinero, financiamiento al terrorismo u otras actividades
-            ilícitas. <br />
-            2. Recopilar información: Reunir todos los detalles relevantes sobre
-            la operación sospechosa, incluyendo nombres, fechas, montos,
-            descripción de la actividad, entre otros. <br />
-            3. Comunicarse con la UIF: Presentar un reporte de operación
-            sospechosa a la UIF a través de su plataforma en línea o por correo
-            electrónico, siguiendo las instrucciones y formatos proporcionados
-            por la institución. <br />
-            4. Mantener la confidencialidad: Es importante mantener la
-            confidencialidad de la información relacionada con la operación
-            sospechosa y no divulgarla a terceros sin autorización. <br />
-            <br />
-            Recuerda que reportar operaciones sospechosas es una responsabilidad
-            legal y ética para prevenir y combatir actividades financieras
-            ilícitas en México.
-          </p>
-        </ul>
+        <h2>Archivo local del DOF</h2>
+        <p v-if="status">
+          {{ status.documents }} documentos y {{ status.chunks }} fragmentos
+          disponibles.
+        </p>
+        <p>{{ statusMessage }}</p>
+        <p>
+          Las respuestas se basan en los documentos cargados. El archivo
+          incluido es histórico y no se actualiza automáticamente.
+        </p>
+        <router-link to="/consult-view">Consultar el archivo</router-link>
       </div>
       <div class="main-right">
-        <h2>Último DOF</h2>
+        <h2>Documentos disponibles</h2>
         <div class="dof-summary">
-          <p>
-            <strong>28/09/2023:</strong> El documento es un aviso sobre la
-            modificación de la Guía Interna para la Elaboración y Actualización
-            de Manuales Administrativos y/o Documentos Normativos del Instituto
-            Nacional de Ciencias Médicas y Nutrición Salvador Zubirán. <br />
-            Se informa sobre la actualización de la normativa interna del
-            instituto, especificando la fecha de emisión y la materia abordada.
-            <br />
-            Se ordena la publicación del aviso en el Diario Oficial de la
-            Federación. <br />
-            <br />
-            El aviso fue emitido por el Director General del Instituto, Dr. José
-            Sifuentes Osornio, el 28 de septiembre de 2023.
-          </p>
+          <p v-if="!documents.length">Todavía no hay documentos indexados.</p>
+          <ul>
+            <li v-for="document in documents" :key="document.id">
+              {{ document.name }} · {{ document.pages }} páginas
+            </li>
+          </ul>
+          <router-link to="/resumen-view"
+            >Ver documentos y resúmenes</router-link
+          >
         </div>
       </div>
     </div>
@@ -66,46 +39,35 @@ import axios from 'axios';
 
 export default {
   name: 'NotificationView',
+  components: { BarraNavegacion },
   data() {
     return {
-      showNotifications: false,
-      showUserMenu: false,
-      menuActive: false,
-      welcomeMessage: 'Notificaciones y Actualizaciones',
+      welcomeMessage: 'Archivo local y estado del servicio',
+      status: null,
+      documents: [],
+      statusMessage: 'Comprobando el servicio local…',
     };
   },
-  components: {
-    BarraNavegacion,
-  },
   methods: {
-    checkAuthentication() {
-      if (!localStorage.getItem('token')) {
-        this.$router.push('/');
-      } else {
-        axios
-          .post('/api/validar_token', {
-            token: localStorage.getItem('token'),
-          })
-          .then((response) => {
-            if (response.data.valid) {
-              this.$router.push('/notification-view');
-            } else {
-              localStorage.removeItem('token');
-              this.$router.push('/');
-            }
-          })
-          .catch(() => {
-            this.$router.push('/');
-          });
+    async fetchStatus() {
+      try {
+        const [status, documents] = await Promise.all([
+          axios.get('/api/status'),
+          axios.get('/api/documents'),
+        ]);
+        this.status = status.data;
+        this.documents = documents.data;
+        this.statusMessage = status.data.ready
+          ? 'El buscador local está listo.'
+          : 'El buscador necesita que Ollama y el índice estén preparados.';
+      } catch (error) {
+        if (error.response?.status === 401) this.$router.push('/');
+        this.statusMessage = 'No se pudo consultar el estado del servicio.';
       }
     },
   },
   mounted() {
-    this.checkAuthentication();
-    window.addEventListener('resize', this.handleResize);
-  },
-  beforeUnmount() {
-    window.removeEventListener('resize', this.handleResize);
+    this.fetchStatus();
   },
 };
 </script>
