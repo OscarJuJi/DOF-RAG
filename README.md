@@ -5,6 +5,11 @@ Federación. The Vue interface is served as a production build by Nginx. FastAPI
 provides accounts, document retrieval, and generation. SQLite stores users,
 revocable sessions, document text, and vectors in a persistent Docker volume.
 
+![DOF-RAG user journey: sign in, ask a question, verify its source, and review a summary](docs/system-flow.gif)
+
+The GIF uses real application screens; the interface remains in Spanish. Regenerate it
+with `python scripts/generate_user_flow.py` using the captures in `docs/user-flow/`.
+
 The local deployment uses Ollama with `qwen3:8b` and
 `qwen3-embedding:0.6b`. It does not require API keys, cloud accounts, trial credits,
 OpenAI, Pinecone, Azure, or a hosted vector database. Models and dependencies must
